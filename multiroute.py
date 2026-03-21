@@ -11,8 +11,8 @@ from engine.shared_runner import (
 # Shared local control surface.
 # Device-bound values are auto-discovered at runtime.
 SKIP_ROUTE_SUFFIXES = []
-START_FROM_ROUTE = 13
-END_AT_ROUTE = 13
+START_FROM_ROUTE = 20
+END_AT_ROUTE = 30
 
 TOTAL_CONFIGS_PER_ROUTE = 80
 STEP_DELAY = DEFAULT_STEP_DELAY
