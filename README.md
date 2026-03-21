@@ -126,6 +126,14 @@ To map coordinates measured on another device back to the shared baseline route 
 4. Run the file in IDE
 5. If multiple devices are connected, set `SERIAL`
 
+To dry-run a v5 recording-directory rename into the current `natlan_rXX_<label><nn>` format:
+
+```bash
+python3 tools/rename_recordings.py
+```
+
+Add `--apply` only after checking the printed plan.
+
 ## Spec Conflict Note
 
 Project root still contains legacy device-specific render-config directories such as:
