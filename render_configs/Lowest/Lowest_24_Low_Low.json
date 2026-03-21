@@ -1,0 +1,178 @@
+{
+  "id": "Lowest_24_Low_Low",
+  "resolution": "Lowest",
+  "shadow": "Low",
+  "effect": "Low",
+  "fps": "24",
+  "steps": [
+    {
+      "type": "tap",
+      "x": 170,
+      "y": 60
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 175,
+      "y": 1075
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 400,
+      "y": 450
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 750
+    },
+    {
+      "type": "sleep",
+      "time": 0.5
+    },
+    {
+      "type": "info",
+      "message": "Setting resolution Lowest"
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 800
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 1530,
+      "y": 120
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 850
+    },
+    {
+      "type": "sleep",
+      "time": 0.5
+    },
+    {
+      "type": "info",
+      "message": "Setting shadow quality Low"
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 900
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 1530,
+      "y": 120
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 950
+    },
+    {
+      "type": "sleep",
+      "time": 0.5
+    },
+    {
+      "type": "info",
+      "message": "Setting visual effects Low"
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 1000
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 1530,
+      "y": 120
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 1200
+    },
+    {
+      "type": "sleep",
+      "time": 0.5
+    },
+    {
+      "type": "info",
+      "message": "Setting fps 24"
+    },
+    {
+      "type": "tap",
+      "x": 2460,
+      "y": 930
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 1530,
+      "y": 120
+    },
+    {
+      "type": "sleep",
+      "time": 1
+    },
+    {
+      "type": "tap",
+      "x": 2630,
+      "y": 90
+    },
+    {
+      "type": "sleep",
+      "time": 1.5
+    },
+    {
+      "type": "tap",
+      "x": 2630,
+      "y": 90
+    },
+    {
+      "type": "sleep",
+      "time": 1.5
+    }
+  ]
+}
