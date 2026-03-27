@@ -1,35 +1,22 @@
 import os
 import signal
-import shutil
 import subprocess
 import time
 
+from engine.binary_resolver import describe_scrcpy_resolution, scrcpy_install_hint
+
 SCRCPY_MAX_FPS = os.environ.get("SCRCPY_MAX_FPS", "60")
 SCRCPY_STARTUP_WAIT = float(os.environ.get("SCRCPY_STARTUP_WAIT", "1.0"))
-WINDOWS_SCRCPY_FALLBACK = r"D:/Softwares/scrcpy-win64-v3.3.3/scrcpy.exe"
 
 
 def resolve_scrcpy_bin():
-    env_value = os.environ.get("SCRCPY_BIN")
-    if env_value:
-        return env_value
-
-    discovered = shutil.which("scrcpy")
-    if discovered:
-        return discovered
-
-    if os.name == "nt" and os.path.exists(WINDOWS_SCRCPY_FALLBACK):
-        return WINDOWS_SCRCPY_FALLBACK
-
-    if os.name == "nt":
-        raise FileNotFoundError(
-            "scrcpy executable not found. Install scrcpy or set SCRCPY_BIN, "
-            f"for example: {WINDOWS_SCRCPY_FALLBACK}"
-        )
+    resolved, _source = describe_scrcpy_resolution()
+    if resolved:
+        return resolved
 
     raise FileNotFoundError(
-        "scrcpy executable not found. Install scrcpy or set SCRCPY_BIN, "
-        "for example: /opt/homebrew/bin/scrcpy"
+        "scrcpy executable not found. Checked SCRCPY_BIN, bundled `third_party/scrcpy`, "
+        f"and PATH. {scrcpy_install_hint()}"
     )
 
 

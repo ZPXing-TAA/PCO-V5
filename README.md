@@ -99,6 +99,7 @@ Those constants should stay focused on local workflow control:
 
 Env controls are still available when convenient:
 
+- `ADB_BIN`
 - `AUTO_SERIAL`
 - `AUTO_DEVICE_ID`
 - `AUTO_TARGET_RESOLUTION`
@@ -113,10 +114,45 @@ Env controls are still available when convenient:
 - `SCRCPY_MAX_FPS`
 - `SCRCPY_STARTUP_WAIT`
 
-Recording uses `scrcpy` from `SCRCPY_BIN` first, then falls back to the system `scrcpy` in `PATH`.
-On macOS, Homebrew installs it at `/opt/homebrew/bin/scrcpy` on Apple Silicon in the common case.
+## Tool Resolution
+
+`adb` lookup order:
+
+1. `ADB_BIN`
+2. bundled binary under `third_party/platform-tools/<platform>/...`
+3. bundled `adb` under `third_party/scrcpy/<platform>/...` when present
+4. system `PATH`
+
+`scrcpy` lookup order:
+
+1. `SCRCPY_BIN`
+2. bundled binary under `third_party/scrcpy/<platform>/...`
+3. system `PATH`
+
+This means a fresh machine can work without global installs if you extract the official Android Platform Tools package into `third_party/platform-tools/<platform>/` and the official scrcpy release into `third_party/scrcpy/<platform>/`.
+
+On Windows, the official `scrcpy` release already contains `adb.exe`, so extracting only the scrcpy zip is often enough for this project.
+
+Recommended platform folder names:
+
+- `windows`
+- `macos`
+- `linux`
+
+Official sources:
+
+- `adb`: Android SDK Platform Tools
+- `scrcpy`: [Genymobile/scrcpy](https://github.com/Genymobile/scrcpy)
+
+Install fallback if you prefer global tools:
+
+- macOS: `brew install scrcpy` and `brew install --cask android-platform-tools`
+- Windows: `winget install --exact Genymobile.scrcpy`
+- Linux: install `adb` and `scrcpy` from your package manager or use the official releases
 
 ## Small Tool
+
+On a fresh machine, run `tools/check_tools.py` first to verify where `adb` and `scrcpy` are being resolved from.
 
 To map coordinates measured on another device back to the shared baseline route space:
 

@@ -4,15 +4,27 @@ import os
 import subprocess
 from typing import Sequence
 
-ADB_BIN = os.environ.get("ADB_BIN", "adb")
+from engine.binary_resolver import adb_install_hint, describe_adb_resolution
 
 
 def build_adb_command(*args: str, serial: str | None = None) -> list[str]:
-    cmd = [ADB_BIN]
+    cmd = [resolve_adb_bin()]
     if serial:
         cmd.extend(["-s", serial])
     cmd.extend(args)
     return cmd
+
+
+def resolve_adb_bin() -> str:
+    resolved, _source = describe_adb_resolution()
+    if resolved:
+        return resolved
+
+    raise FileNotFoundError(
+        "adb executable not found. Checked ADB_BIN, bundled `third_party/platform-tools`, "
+        "bundled `third_party/scrcpy`, "
+        f"and PATH. {adb_install_hint()}"
+    )
 
 
 def run_adb(
