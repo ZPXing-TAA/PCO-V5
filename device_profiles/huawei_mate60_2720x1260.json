@@ -2,7 +2,6 @@
   "device_id": "huawei_mate60_2720x1260",
   "device_label": "HUAWEI Mate 60",
   "target_resolution": [2720, 1260],
-  "offsets": {},
   "defaults": {
     "video_base": "recordings/huaweimate",
     "total_configs_per_route": 80

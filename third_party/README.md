@@ -41,6 +41,9 @@ third_party/
 
 The resolver searches recursively inside the platform folder, so the extracted official release directory name does not need to be renamed.
 
+The repository already includes visible `windows/` placeholder folders under both `platform-tools/` and `scrcpy/`
+so the intended layout is obvious on a fresh checkout.
+
 For `adb`, the project first prefers `third_party/platform-tools/<platform>/...`, but it can also reuse `adb.exe` found inside the Windows scrcpy release.
 
 ## Environment variables

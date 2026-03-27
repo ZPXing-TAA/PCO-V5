@@ -52,7 +52,6 @@ Profiles live under `device_profiles/<device_id>.json`.
 Example fields:
 
 - `target_resolution`
-- `offsets`
 - `defaults.video_base`
 - `defaults.config_root`
 - `legacy_aliases`
@@ -63,7 +62,6 @@ If no profile matches, the runner still proceeds with:
 - discovered `manufacturer`
 - discovered `model`
 - discovered `resolution`
-- empty `offsets`
 
 ## Usage
 

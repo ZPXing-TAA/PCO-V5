@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, Optional
 
 from engine.device_discovery import select_discovered_device
-from engine.device_profiles import find_matching_device_profile
+from engine.device_profiles import ensure_device_profile
 from engine.scaling import (
     BASELINE_DEVICE_ID,
     BASELINE_DEVICE_LABEL,
@@ -80,9 +80,7 @@ def build_runtime_device_context(
     device_profiles_root: str | Path | None = None,
 ) -> Dict[str, Any]:
     scripts_root_path = Path(__file__).resolve().parents[1]
-    project_root_path = Path(
-        project_root or os.environ.get("AUTO_PROJECT_ROOT") or Path(__file__).resolve().parents[3]
-    )
+    project_root_path = Path(project_root or os.environ.get("AUTO_PROJECT_ROOT") or Path.cwd())
     profiles_root = Path(
         device_profiles_root
         or os.environ.get("AUTO_DEVICE_PROFILES_ROOT")
@@ -95,15 +93,20 @@ def build_runtime_device_context(
     env_video_base = os.environ.get("AUTO_VIDEO_BASE")
     env_config_root = os.environ.get("AUTO_CONFIG_ROOT")
     env_total_configs = os.environ.get("AUTO_TOTAL_CONFIGS_PER_ROUTE")
+    resolved_total_configs = (
+        total_configs_per_route
+        if total_configs_per_route is not None
+        else (int(env_total_configs) if env_total_configs else 80)
+    )
 
     discovered_device = select_discovered_device(serial=serial or env_serial)
-    device_profile = find_matching_device_profile(
+    device_profile, device_profile_created = ensure_device_profile(
         device_profiles_root=profiles_root,
         discovered_device=discovered_device,
         explicit_device_id=explicit_device_id or env_device_id,
+        total_configs_per_route=resolved_total_configs,
     )
 
-    profile_offsets = dict((device_profile or {}).get("offsets", {}))
     profile_defaults = dict((device_profile or {}).get("defaults", {}))
     profile_target_resolution = _coerce_resolution((device_profile or {}).get("target_resolution"))
 
@@ -140,10 +143,10 @@ def build_runtime_device_context(
         "baseline_resolution": BASELINE_RESOLUTION,
         "target_resolution": resolved_target_resolution,
         "target_resolution_text": format_resolution(resolved_target_resolution),
-        "offsets": profile_offsets,
         "defaults": defaults,
         "discovered_device": discovered_device,
         "device_profile": device_profile,
+        "device_profile_created": device_profile_created,
         "device_profiles_root": str(profiles_root),
         "project_root": str(project_root_path),
         "scripts_root": str(scripts_root_path),

@@ -159,10 +159,19 @@ def collect_configs_in_order(root_folder: str | Path, config_ids: Sequence[str])
 
 
 def print_runtime_device_context(runtime_device_context: Mapping[str, object]) -> None:
+    discovered_device = runtime_device_context.get("discovered_device", {}) or {}
+    device_profile = runtime_device_context.get("device_profile", {}) or {}
+    device_profile_created = bool(runtime_device_context.get("device_profile_created"))
     print("[DEVICE] serial:", runtime_device_context["serial"])
     print("[DEVICE] device_label:", runtime_device_context["device_label"])
     print("[DEVICE] device_id:", runtime_device_context["device_id"])
     print("[DEVICE] target_resolution:", runtime_device_context["target_resolution_text"])
+    if discovered_device:
+        print("[DEVICE] discovered_resolution:", discovered_device.get("resolution_text"))
+        print("[DEVICE] discovered_device_id:", discovered_device.get("device_id"))
+    print("[DEVICE] device_profile:", device_profile.get("_path") if device_profile else "none")
+    if device_profile_created:
+        print("[DEVICE] device_profile_created:", True)
 
 
 def _country_from_route_root(route_root: Path) -> str:

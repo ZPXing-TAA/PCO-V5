@@ -2,7 +2,6 @@
   "device_id": "oppo_findx9pro_2772x1272",
   "device_label": "OPPO Find X9 Pro",
   "target_resolution": [2772, 1272],
-  "offsets": {},
   "defaults": {
     "video_base": "recordings/ofx",
     "total_configs_per_route": 80

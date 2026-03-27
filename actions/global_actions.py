@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import os
 import time
-from typing import Dict, Iterable, Mapping, MutableMapping, Optional, Tuple
+from typing import Dict, Mapping, MutableMapping, Tuple
 
 from engine.adb import shell_input_swipe, shell_input_tap
 from engine.scaling import BASELINE_RESOLUTION, scale_point
 
-OffsetMap = Mapping[str, Tuple[int, int]]
 PointMap = Dict[str, Tuple[int, int]]
 
 BASE_POINTS: PointMap = {
@@ -52,87 +51,13 @@ BASE_POINTS: PointMap = {
     "ADJUST_GAME_TIME_P5": (165, 90),
 }
 
-POINT_GROUPS: Dict[str, Tuple[str, ...]] = {
-    "MOVE_START": ("MOVE",),
-    "MOVE_END": ("MOVE",),
-    "ATTACK": ("ATTACK",),
-    "JUMP": ("JUMP",),
-    "SPRINT": ("SPRINT",),
-    "UTIL": ("UTIL",),
-    "FIG1": ("FIG",),
-    "FIG2": ("FIG",),
-    "FIG3": ("FIG",),
-    "TURN_180_L": ("TURN", "TURN_180"),
-    "TURN_180_R": ("TURN", "TURN_180"),
-    "TURN_90_R_L": ("TURN", "TURN_90_R"),
-    "TURN_90_R_R": ("TURN", "TURN_90_R"),
-    "TURN_90_L_L": ("TURN", "TURN_90_L"),
-    "TURN_90_L_R": ("TURN", "TURN_90_L"),
-    "TURN_45_R_L": ("TURN", "TURN_45_R"),
-    "TURN_45_R_R": ("TURN", "TURN_45_R"),
-    "TURN_45_L_L": ("TURN", "TURN_45_L"),
-    "TURN_45_L_R": ("TURN", "TURN_45_L"),
-    "TURN_30_R_L": ("TURN", "TURN_30_R"),
-    "TURN_30_R_R": ("TURN", "TURN_30_R"),
-    "TURN_30_L_L": ("TURN", "TURN_30_L"),
-    "TURN_30_L_R": ("TURN", "TURN_30_L"),
-    "TURN_135_R_L": ("TURN", "TURN_135_R"),
-    "TURN_135_R_R": ("TURN", "TURN_135_R"),
-    "TURN_135_L_L": ("TURN", "TURN_135_L"),
-    "TURN_135_L_R": ("TURN", "TURN_135_L"),
-    "OPEN_MAP": ("OPEN_MAP",),
-    "CONFIRM_TELEPORT": ("CONFIRM_TELEPORT",),
-    "ADJUST_GAME_TIME_P1": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_P2": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_S1": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_S2": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_S3": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_S4": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_S5": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_P3": ("ADJUST_GAME_TIME",),
-    "ADJUST_GAME_TIME_P4": ("ADJUST_GAME_TIME",),
-}
-
-
-def _add(point: Tuple[int, int], offset: Tuple[int, int]) -> Tuple[int, int]:
-    return point[0] + offset[0], point[1] + offset[1]
-
-
-def _env_offset(key: str) -> Tuple[int, int]:
-    return int(os.environ.get(f"{key}_X_OFFSET", "0")), int(os.environ.get(f"{key}_Y_OFFSET", "0"))
-
-
-def _resolve_point(
-    name: str,
-    scaled_point: Tuple[int, int],
-    offsets: OffsetMap,
-    use_env_offsets: bool,
-) -> Tuple[int, int]:
-    point = scaled_point
-    keys: Iterable[str] = ("GLOBAL",) + POINT_GROUPS.get(name, ()) + (name,)
-    for key in keys:
-        if key in offsets:
-            point = _add(point, tuple(offsets[key]))
-        if use_env_offsets:
-            point = _add(point, _env_offset(key))
-    return int(point[0]), int(point[1])
-
-
-def build_actions(
-    runtime_device_context: Mapping[str, object],
-    use_env_offsets: bool = True,
-) -> Dict[str, object]:
+def build_actions(runtime_device_context: Mapping[str, object]) -> Dict[str, object]:
     target_resolution = tuple(runtime_device_context["target_resolution"])
     serial = str(runtime_device_context["serial"])
-    offsets = runtime_device_context.get("offsets", {}) or {}
 
-    mapped_points: PointMap = {
+    points: PointMap = {
         name: scale_point(point, dst_resolution=target_resolution, src_resolution=BASELINE_RESOLUTION)
         for name, point in BASE_POINTS.items()
-    }
-    points: PointMap = {
-        name: _resolve_point(name, mapped_point, offsets, use_env_offsets=use_env_offsets)
-        for name, mapped_point in mapped_points.items()
     }
 
     glide_hold_ms = int(os.environ.get("AUTO_GLIDE_UTIL_HOLD_MS", "1400"))
@@ -317,6 +242,5 @@ def build_actions(
 def bind_actions(
     namespace: MutableMapping[str, object],
     runtime_device_context: Mapping[str, object],
-    use_env_offsets: bool = True,
 ) -> None:
-    namespace.update(build_actions(runtime_device_context, use_env_offsets=use_env_offsets))
+    namespace.update(build_actions(runtime_device_context))
