@@ -4,6 +4,7 @@ from engine.device_context import build_runtime_device_context
 from engine.shared_runner import DEFAULT_STEP_DELAY, run_multiroute_workflow
 
 # Fixed measurement order from /Users/xingzhengpeng/Downloads/measure_12_key_configs.md
+ROUTE_SUBPATH = "natlan"  # "natlan" | "mondstadt"
 ROUTE_SUFFIX = 1
 STEP_DELAY = DEFAULT_STEP_DELAY
 
@@ -27,6 +28,7 @@ def main() -> None:
     runtime_device_context = build_runtime_device_context()
     run_multiroute_workflow(
         runtime_device_context=runtime_device_context,
+        route_subpath=ROUTE_SUBPATH,
         route_suffixes=[ROUTE_SUFFIX],
         config_ids=MEASUREMENT_CONFIG_IDS,
         step_delay=STEP_DELAY,

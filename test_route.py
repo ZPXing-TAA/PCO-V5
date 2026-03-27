@@ -5,7 +5,8 @@ from engine.shared_runner import DEFAULT_STEP_DELAY, run_test_route_workflow
 
 # Shared local control surface.
 # Device-bound values are auto-discovered at runtime.
-ROUTE_SUFFIX = 0
+ROUTE_SUBPATH = "natlan"  # "natlan" | "mondstadt"
+ROUTE_SUFFIX = 1
 TEST_MODE = "single"  # "single" | "current_next"
 # TEST_MODE = "current_next"  # "single" | "current_next"
 SKIP_TELEPORT = False
@@ -21,6 +22,7 @@ def main() -> None:
     runtime_device_context = build_runtime_device_context()
     run_test_route_workflow(
         runtime_device_context=runtime_device_context,
+        route_subpath=ROUTE_SUBPATH,
         route_suffix=ROUTE_SUFFIX,
         test_mode=TEST_MODE,
         skip_teleport=SKIP_TELEPORT,

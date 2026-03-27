@@ -10,8 +10,9 @@ from engine.shared_runner import (
 
 # Shared local control surface.
 # Device-bound values are auto-discovered at runtime.
+ROUTE_SUBPATH = "natlan"  # "natlan" | "mondstadt"
 SKIP_ROUTE_SUFFIXES = []
-START_FROM_ROUTE = 20
+START_FROM_ROUTE = 1
 END_AT_ROUTE = 30
 
 TOTAL_CONFIGS_PER_ROUTE = 80
@@ -24,6 +25,7 @@ def main() -> None:
     runtime_device_context = build_runtime_device_context(total_configs_per_route=TOTAL_CONFIGS_PER_ROUTE)
     run_multiroute_workflow(
         runtime_device_context=runtime_device_context,
+        route_subpath=ROUTE_SUBPATH,
         skip_route_suffixes=SKIP_ROUTE_SUFFIXES,
         start_from_route=START_FROM_ROUTE,
         end_at_route=END_AT_ROUTE,

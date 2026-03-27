@@ -21,10 +21,22 @@ from recording.recorder import Recorder
 DEFAULT_STEP_DELAY = 0.4
 DEFAULT_ROUTE_GAP = 1.0
 DEFAULT_RECORD_START_SETTLE_SEC = float(os.environ.get("AUTO_RECORD_START_SETTLE_SEC", "0.3"))
+ALLOWED_ROUTE_SUBPATHS = ("natlan", "mondstadt")
+ROUTES_ROOT = Path(__file__).resolve().parents[1] / "routes"
 
 
 def default_route_root() -> Path:
-    return Path(__file__).resolve().parents[1] / "routes" / "natlan"
+    return ROUTES_ROOT / "natlan"
+
+
+def resolve_route_root(route_subpath: str | None = None) -> Path:
+    selected = (route_subpath or "natlan").strip().lower()
+    if selected not in ALLOWED_ROUTE_SUBPATHS:
+        allowed = ", ".join(ALLOWED_ROUTE_SUBPATHS)
+        raise ValueError(
+            f"route_subpath must be one of: {allowed}. Got {route_subpath!r}."
+        )
+    return ROUTES_ROOT / selected
 
 
 def parse_route_suffix_list(raw_value: str | None) -> Optional[List[int]]:
@@ -196,7 +208,7 @@ def _prepare_route_recorders(
 
 def run_multiroute_workflow(
     runtime_device_context: Mapping[str, object],
-    route_root: str | Path | None = None,
+    route_subpath: str | None = None,
     route_suffixes: Sequence[int] | None = None,
     skip_route_suffixes: Sequence[int] | None = None,
     config_ids: Sequence[str] | None = None,
@@ -208,7 +220,7 @@ def run_multiroute_workflow(
     enable_recording: bool = True,
     use_next_portal_on_last_config: bool = True,
 ) -> None:
-    route_root_path = Path(route_root or default_route_root())
+    route_root_path = resolve_route_root(route_subpath)
     defaults = dict(runtime_device_context["defaults"])
     selected_route_suffixes = list(route_suffixes or discover_route_suffixes(route_root_path))
     if not selected_route_suffixes:
@@ -361,7 +373,7 @@ def run_multiroute_workflow(
 
 def run_debug_multiroute_workflow(
     runtime_device_context: Mapping[str, object],
-    route_root: str | Path | None = None,
+    route_subpath: str | None = None,
     route_suffixes: Sequence[int] | None = None,
     skip_route_suffixes: Sequence[int] | None = None,
     start_from_route: int | None = None,
@@ -369,7 +381,7 @@ def run_debug_multiroute_workflow(
     step_delay: float = DEFAULT_STEP_DELAY,
     route_gap: float = DEFAULT_ROUTE_GAP,
 ) -> None:
-    route_root_path = Path(route_root or default_route_root())
+    route_root_path = resolve_route_root(route_subpath)
     selected_route_suffixes = list(route_suffixes or discover_route_suffixes(route_root_path))
     if not selected_route_suffixes:
         raise ValueError("No route suffix found.")
@@ -419,11 +431,11 @@ def run_test_route_workflow(
     runtime_device_context: Mapping[str, object],
     route_suffix: int,
     test_mode: str,
-    route_root: str | Path | None = None,
+    route_subpath: str | None = None,
     skip_teleport: bool = False,
     step_delay: float = DEFAULT_STEP_DELAY,
 ) -> None:
-    route_root_path = Path(route_root or default_route_root())
+    route_root_path = resolve_route_root(route_subpath)
     route_module = load_route_module(route_root_path, route_suffix)
     route = route_module.ROUTE
     current_portal = build_portal(route_module.PORTAL, runtime_device_context)

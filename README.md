@@ -20,7 +20,7 @@ Device-bound values are not meant to be edited there:
 - `target_resolution` comes from discovery, with optional profile override
 - `video_base` falls back to `recordings/<device_id>` when no profile default exists
 - `config_root` defaults to `Auto_Scripts_v5/render_configs`
-- `route_root` defaults to `routes/natlan`
+- `route_subpath` defaults to `natlan`, resolved under `routes/`
 
 ## Runtime Model
 
@@ -125,6 +125,14 @@ To map coordinates measured on another device back to the shared baseline route 
 3. Edit `POINTS`
 4. Run the file in IDE
 5. If multiple devices are connected, set `SERIAL`
+
+To open scrcpy with Android `pointer_location` enabled for manual coordinate pickup:
+
+1. Open `tools/get_coordinate.py`
+2. Keep one adb device connected
+3. If multiple devices are connected, set `SERIAL`
+4. Run the file in IDE
+5. Close scrcpy when finished; the script restores `pointer_location` automatically
 
 To dry-run a v5 recording-directory rename into the current `natlan_rXX_<label><nn>` format:
 
