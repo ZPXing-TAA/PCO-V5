@@ -108,9 +108,37 @@ Env controls are still available when convenient:
 - `AUTO_ROUTE_SUFFIX`
 - `AUTO_TEST_MODE`
 - `AUTO_SKIP_TELEPORT`
+- `AUTO_VIDEO_POSTPROCESS_MODE`
+- `AUTO_VIDEO_POSTPROCESS_WORKERS`
+- `AUTO_VIDEO_SHORTFALL_TOLERANCE_SEC`
 - `SCRCPY_BIN`
 - `SCRCPY_MAX_FPS`
 - `SCRCPY_STARTUP_WAIT`
+- `FFMPEG_BIN`
+- `FFPROBE_BIN`
+
+## Recording Post-Processing
+
+Recorded route segments now use a two-stage layout:
+
+1. scrcpy records each original `record_start` / `record_stop` window into a temporary raw directory under
+   `recordings/<device>/_raw_segments/...`
+2. after the last config finishes a raw segment directory, the runner post-processes that whole directory into the
+   stable final layout:
+
+```text
+<video_base>/<label>/<country>_r<route:02d>_<label><occurrence:02d>/<config_id>.mp4
+```
+
+Rules:
+
+- final numbering is recomputed within the same `route + label`
+- route-declared duration drives clip planning
+- `< 5s` segments are kept as one final clip
+- `>= 5s` segments are expanded into `floor(t_route / 5)` planned clips
+- only the final planned clip may be slightly short when the recorded file undershoots a little
+
+Use `VIDEO_POSTPROCESS_MODE = "dry-run"` in [multiroute.py](/Users/xingzhengpeng/CODEZONE/PCO/Power-Optimization/DATA COLLECTION/Auto_Scripts_v5/multiroute.py) or `AUTO_VIDEO_POSTPROCESS_MODE=dry-run` to print the full split-and-renumber plan without writing final outputs.
 
 ## Tool Resolution
 
@@ -126,6 +154,11 @@ Env controls are still available when convenient:
 1. `SCRCPY_BIN`
 2. bundled binary under `third_party/scrcpy/<platform>/...`
 3. system `PATH`
+
+`ffmpeg` / `ffprobe` lookup order:
+
+1. `FFMPEG_BIN` / `FFPROBE_BIN`
+2. system `PATH`
 
 This means a fresh machine can work without global installs if you extract the official Android Platform Tools package into `third_party/platform-tools/<platform>/` and the official scrcpy release into `third_party/scrcpy/<platform>/`.
 

@@ -86,6 +86,30 @@ def describe_scrcpy_resolution() -> Tuple[str | None, str | None]:
     return None, None
 
 
+def describe_ffmpeg_resolution() -> Tuple[str | None, str | None]:
+    env_value = os.environ.get("FFMPEG_BIN")
+    if env_value:
+        return env_value, "FFMPEG_BIN"
+
+    discovered = find_path_binary("ffmpeg")
+    if discovered:
+        return discovered, "PATH"
+
+    return None, None
+
+
+def describe_ffprobe_resolution() -> Tuple[str | None, str | None]:
+    env_value = os.environ.get("FFPROBE_BIN")
+    if env_value:
+        return env_value, "FFPROBE_BIN"
+
+    discovered = find_path_binary("ffprobe")
+    if discovered:
+        return discovered, "PATH"
+
+    return None, None
+
+
 def adb_install_hint() -> str:
     platform_dir = current_platform_dir()
     if platform_dir == "macos":
@@ -122,3 +146,12 @@ def scrcpy_install_hint() -> str:
         "Install scrcpy with your system package manager, or place the official "
         "scrcpy release under `third_party/scrcpy/linux/`."
     )
+
+
+def ffmpeg_install_hint() -> str:
+    platform_dir = current_platform_dir()
+    if platform_dir == "macos":
+        return "Install ffmpeg with `brew install ffmpeg`, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+    if platform_dir == "windows":
+        return "Install ffmpeg and ensure `ffmpeg.exe` / `ffprobe.exe` are on PATH, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+    return "Install ffmpeg with your system package manager, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
