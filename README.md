@@ -158,7 +158,9 @@ Use `VIDEO_POSTPROCESS_MODE = "dry-run"` in [multiroute.py](/Users/xingzhengpeng
 `ffmpeg` / `ffprobe` lookup order:
 
 1. `FFMPEG_BIN` / `FFPROBE_BIN`
-2. system `PATH`
+2. sibling binary next to the explicitly configured `FFMPEG_BIN` or `FFPROBE_BIN`
+3. bundled binary under `third_party/ffmpeg/<platform>/...`
+4. system `PATH`
 
 This means a fresh machine can work without global installs if you extract the official Android Platform Tools package into `third_party/platform-tools/<platform>/` and the official scrcpy release into `third_party/scrcpy/<platform>/`.
 
@@ -183,7 +185,7 @@ Install fallback if you prefer global tools:
 
 ## Small Tool
 
-On a fresh machine, run `tools/check_tools.py` first to verify where `adb` and `scrcpy` are being resolved from.
+On a fresh machine, run `tools/check_tools.py` first to verify where `adb`, `scrcpy`, `ffmpeg`, and `ffprobe` are being resolved from.
 
 To map coordinates measured on another device back to the shared baseline route space:
 

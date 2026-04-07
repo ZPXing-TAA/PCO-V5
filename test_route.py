@@ -5,10 +5,11 @@ from engine.shared_runner import DEFAULT_STEP_DELAY, run_test_route_workflow
 
 # Shared local control surface.
 # Device-bound values are auto-discovered at runtime.
-ROUTE_SUBPATH = "natlan"  # "natlan" | "mondstadt"
-ROUTE_SUFFIX = 1
-TEST_MODE = "single"  # "single" | "current_next"
-# TEST_MODE = "current_next"  # "single" | "current_next"
+ROUTE_SUBPATH = "mondstadt"  # Any existing directory name under routes/
+ROUTE_SUFFIX = 7
+# TEST_MODE = "single"  # "single" | "current_next"
+TEST_MODE = "current_next"  # "single" | "current_next"
+# SKIP_TELEPORT = True 
 SKIP_TELEPORT = False
 STEP_DELAY = DEFAULT_STEP_DELAY
 

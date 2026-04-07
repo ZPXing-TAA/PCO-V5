@@ -69,6 +69,12 @@ def resolve_ffprobe_bin() -> str:
     )
 
 
+def ensure_postprocess_tools_available(dry_run: bool) -> None:
+    resolve_ffprobe_bin()
+    if not dry_run:
+        resolve_ffmpeg_bin()
+
+
 def probe_media_duration_sec(video_path: str) -> float:
     ffprobe_bin = resolve_ffprobe_bin()
     completed = subprocess.run(

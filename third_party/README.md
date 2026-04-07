@@ -1,6 +1,6 @@
 # Bundled Third-Party Tools
 
-This project can use bundled copies of `adb` and `scrcpy` so a fresh machine does not need a global install first.
+This project can use bundled copies of `adb`, `scrcpy`, `ffmpeg`, and `ffprobe` so a fresh machine does not need a global install first.
 
 Resolution order:
 
@@ -37,6 +37,22 @@ third_party/
       scrcpy-linux-.../
         scrcpy
         ...
+  ffmpeg/
+    windows/
+      ffmpeg-master-latest-win64-gpl/
+        bin/
+          ffmpeg.exe
+          ffprobe.exe
+    macos/
+      ffmpeg-.../
+        bin/
+          ffmpeg
+          ffprobe
+    linux/
+      ffmpeg-.../
+        bin/
+          ffmpeg
+          ffprobe
 ```
 
 The resolver searches recursively inside the platform folder, so the extracted official release directory name does not need to be renamed.
@@ -50,6 +66,8 @@ For `adb`, the project first prefers `third_party/platform-tools/<platform>/...`
 
 - `ADB_BIN`: absolute path to `adb` if you want to override everything
 - `SCRCPY_BIN`: absolute path to `scrcpy` if you want to override everything
+- `FFMPEG_BIN`: absolute path to `ffmpeg` if you want to override everything
+- `FFPROBE_BIN`: absolute path to `ffprobe` if you want to override everything
 
 ## Recommended source
 
@@ -57,3 +75,4 @@ Only use the official releases:
 
 - `adb`: Android SDK Platform Tools from Google
 - `scrcpy`: [Genymobile/scrcpy](https://github.com/Genymobile/scrcpy)
+- `ffmpeg`: official builds from [ffmpeg.org](https://ffmpeg.org/download.html) or a trusted official mirror linked there

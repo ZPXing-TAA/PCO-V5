@@ -61,7 +61,7 @@ def main() -> int:
         print("Ready: adb, scrcpy, ffmpeg, and ffprobe are all available.")
         return 0
 
-    print("Not ready: install missing tools globally or place official releases under third_party/.")
+    print("Not ready: install missing tools globally, set the override env vars, or place official releases under third_party/.")
     return 1
 
 

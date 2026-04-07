@@ -18,7 +18,11 @@ from engine.route_segments import (
 )
 from engine.runner import build_action_table, run_route
 from engine.scaling import BASELINE_RESOLUTION, scale_xy
-from engine.video_postprocess import DEFAULT_SHORTFALL_TOLERANCE_SEC, process_segment_directory
+from engine.video_postprocess import (
+    DEFAULT_SHORTFALL_TOLERANCE_SEC,
+    ensure_postprocess_tools_available,
+    process_segment_directory,
+)
 from recording.recorder import Recorder
 
 DEFAULT_STEP_DELAY = 0.4
@@ -26,7 +30,6 @@ DEFAULT_ROUTE_GAP = 1.0
 DEFAULT_RECORD_START_SETTLE_SEC = float(os.environ.get("AUTO_RECORD_START_SETTLE_SEC", "0.3"))
 DEFAULT_VIDEO_POSTPROCESS_MODE = os.environ.get("AUTO_VIDEO_POSTPROCESS_MODE", "apply").strip().lower()
 DEFAULT_VIDEO_POSTPROCESS_WORKERS = int(os.environ.get("AUTO_VIDEO_POSTPROCESS_WORKERS", "1"))
-ALLOWED_ROUTE_SUBPATHS = ("natlan", "mondstadt")
 ROUTES_ROOT = Path(__file__).resolve().parents[1] / "routes"
 
 
@@ -34,14 +37,31 @@ def default_route_root() -> Path:
     return ROUTES_ROOT / "natlan"
 
 
+def discover_route_subpaths() -> List[str]:
+    if not ROUTES_ROOT.is_dir():
+        return []
+    return sorted(path.name for path in ROUTES_ROOT.iterdir() if path.is_dir())
+
+
 def resolve_route_root(route_subpath: str | None = None) -> Path:
     selected = (route_subpath or "natlan").strip().lower()
-    if selected not in ALLOWED_ROUTE_SUBPATHS:
-        allowed = ", ".join(ALLOWED_ROUTE_SUBPATHS)
+    routes_root = ROUTES_ROOT.resolve()
+    candidate = (routes_root / selected).resolve()
+    try:
+        relative_candidate = candidate.relative_to(routes_root)
+    except ValueError:
+        relative_candidate = None
+    if (
+        relative_candidate is None
+        or len(relative_candidate.parts) != 1
+        or not candidate.is_dir()
+    ):
+        available = ", ".join(discover_route_subpaths()) or "<none>"
         raise ValueError(
-            f"route_subpath must be one of: {allowed}. Got {route_subpath!r}."
+            f"route_subpath must match a directory under {ROUTES_ROOT}. "
+            f"Available: {available}. Got {route_subpath!r}."
         )
-    return ROUTES_ROOT / selected
+    return candidate
 
 
 def parse_route_suffix_list(raw_value: str | None) -> Optional[List[int]]:
@@ -299,6 +319,13 @@ def run_multiroute_workflow(
     if enable_recording:
         print(f"[INFO] Video postprocess: {resolved_postprocess_mode}")
         print(f"[INFO] Video shortfall tolerance: {video_shortfall_tolerance_sec:.3f}s")
+        try:
+            ensure_postprocess_tools_available(dry_run=resolved_postprocess_mode == "dry-run")
+        except FileNotFoundError as exc:
+            raise RuntimeError(
+                "Recording post-process preflight failed before route execution. "
+                f"mode={resolved_postprocess_mode}. {exc}"
+            ) from exc
     if config_ids is not None:
         print(f"[INFO] Config order: {list(config_ids)}")
 

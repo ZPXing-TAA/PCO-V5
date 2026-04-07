@@ -6,6 +6,9 @@ import sys
 from pathlib import Path
 from typing import Tuple
 
+if os.name == "nt":
+    import winreg
+
 
 def project_root() -> Path:
     return Path(__file__).resolve().parents[1]
@@ -50,8 +53,46 @@ def find_path_binary(stem: str) -> str | None:
     return shutil.which(stem)
 
 
+def read_persistent_env_var(name: str) -> str | None:
+    if os.name != "nt":
+        return None
+
+    registry_locations = (
+        (winreg.HKEY_CURRENT_USER, r"Environment"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SYSTEM\CurrentControlSet\Control\Session Manager\Environment"),
+    )
+    for hive, subkey in registry_locations:
+        try:
+            with winreg.OpenKey(hive, subkey) as key:
+                value, _value_type = winreg.QueryValueEx(key, name)
+        except FileNotFoundError:
+            continue
+        except OSError:
+            continue
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def resolve_env_override(name: str) -> str | None:
+    env_value = os.environ.get(name)
+    if env_value and env_value.strip():
+        return env_value.strip()
+    return read_persistent_env_var(name)
+
+
+def find_sibling_binary(explicit_binary: str, sibling_stem: str) -> str | None:
+    parent = Path(explicit_binary).expanduser().parent
+    candidate = parent / executable_name(sibling_stem)
+    if not candidate.is_file():
+        return None
+    if os.name != "nt" and not os.access(candidate, os.X_OK):
+        return None
+    return str(candidate)
+
+
 def describe_adb_resolution() -> Tuple[str | None, str | None]:
-    env_value = os.environ.get("ADB_BIN")
+    env_value = resolve_env_override("ADB_BIN")
     if env_value:
         return env_value, "ADB_BIN"
 
@@ -71,7 +112,7 @@ def describe_adb_resolution() -> Tuple[str | None, str | None]:
 
 
 def describe_scrcpy_resolution() -> Tuple[str | None, str | None]:
-    env_value = os.environ.get("SCRCPY_BIN")
+    env_value = resolve_env_override("SCRCPY_BIN")
     if env_value:
         return env_value, "SCRCPY_BIN"
 
@@ -87,9 +128,19 @@ def describe_scrcpy_resolution() -> Tuple[str | None, str | None]:
 
 
 def describe_ffmpeg_resolution() -> Tuple[str | None, str | None]:
-    env_value = os.environ.get("FFMPEG_BIN")
+    env_value = resolve_env_override("FFMPEG_BIN")
     if env_value:
         return env_value, "FFMPEG_BIN"
+
+    sibling_from_ffprobe = resolve_env_override("FFPROBE_BIN")
+    if sibling_from_ffprobe:
+        sibling = find_sibling_binary(sibling_from_ffprobe, "ffmpeg")
+        if sibling:
+            return sibling, "FFPROBE_BIN sibling"
+
+    bundled = find_bundled_binary("third_party/ffmpeg", "ffmpeg")
+    if bundled:
+        return bundled, "third_party/ffmpeg"
 
     discovered = find_path_binary("ffmpeg")
     if discovered:
@@ -99,9 +150,19 @@ def describe_ffmpeg_resolution() -> Tuple[str | None, str | None]:
 
 
 def describe_ffprobe_resolution() -> Tuple[str | None, str | None]:
-    env_value = os.environ.get("FFPROBE_BIN")
+    env_value = resolve_env_override("FFPROBE_BIN")
     if env_value:
         return env_value, "FFPROBE_BIN"
+
+    sibling_from_ffmpeg = resolve_env_override("FFMPEG_BIN")
+    if sibling_from_ffmpeg:
+        sibling = find_sibling_binary(sibling_from_ffmpeg, "ffprobe")
+        if sibling:
+            return sibling, "FFMPEG_BIN sibling"
+
+    bundled = find_bundled_binary("third_party/ffmpeg", "ffprobe")
+    if bundled:
+        return bundled, "third_party/ffmpeg"
 
     discovered = find_path_binary("ffprobe")
     if discovered:
@@ -151,7 +212,16 @@ def scrcpy_install_hint() -> str:
 def ffmpeg_install_hint() -> str:
     platform_dir = current_platform_dir()
     if platform_dir == "macos":
-        return "Install ffmpeg with `brew install ffmpeg`, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+        return (
+            "Install ffmpeg with `brew install ffmpeg`, place an official build under "
+            "`third_party/ffmpeg/macos/`, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+        )
     if platform_dir == "windows":
-        return "Install ffmpeg and ensure `ffmpeg.exe` / `ffprobe.exe` are on PATH, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
-    return "Install ffmpeg with your system package manager, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+        return (
+            "Install ffmpeg and ensure `ffmpeg.exe` / `ffprobe.exe` are on PATH, place an official build under "
+            "`third_party/ffmpeg/windows/`, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+        )
+    return (
+        "Install ffmpeg with your system package manager, place an official build under "
+        "`third_party/ffmpeg/linux/`, or set `FFMPEG_BIN` / `FFPROBE_BIN`."
+    )

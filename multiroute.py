@@ -13,10 +13,10 @@ from engine.video_postprocess import DEFAULT_SHORTFALL_TOLERANCE_SEC
 
 # Shared local control surface.
 # Device-bound values are auto-discovered at runtime.
-ROUTE_SUBPATH = "natlan"  # "natlan" | "mondstadt"
+ROUTE_SUBPATH = "mondstadt"  # "natlan" | "mondstadt"
 SKIP_ROUTE_SUFFIXES = []
-START_FROM_ROUTE = 1
-END_AT_ROUTE = 30
+START_FROM_ROUTE = 7
+END_AT_ROUTE = 10
 
 TOTAL_CONFIGS_PER_ROUTE = 80
 STEP_DELAY = DEFAULT_STEP_DELAY
