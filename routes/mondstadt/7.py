@@ -1,5 +1,7 @@
 ROUTE = [
-    ("turn_180",),
+    ("turn_left_90",),
+    ("sleep",1),
+    ("turn_left_90",),
     ("record_start",),
     ("walk",10),
     ("record_stop",),

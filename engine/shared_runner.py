@@ -183,6 +183,32 @@ def collect_configs_in_order(root_folder: str | Path, config_ids: Sequence[str])
     return picked
 
 
+def resolve_config_window(
+    configs: Sequence[Tuple[str, str]],
+    start_from_index: int | None = None,
+    end_at_index: int | None = None,
+) -> Tuple[List[Tuple[str, str]], int, int, int]:
+    total = len(configs)
+    if total == 0:
+        return [], 0, 0, 0
+
+    if start_from_index is not None and start_from_index <= 0:
+        raise ValueError("start_from_config_index must be >= 1.")
+    if end_at_index is not None and end_at_index <= 0:
+        raise ValueError("end_at_config_index must be >= 1.")
+    if start_from_index is not None and start_from_index > total:
+        raise ValueError(f"start_from_config_index={start_from_index} exceeds config count {total}.")
+    if end_at_index is not None and end_at_index > total:
+        raise ValueError(f"end_at_config_index={end_at_index} exceeds config count {total}.")
+    if start_from_index is not None and end_at_index is not None and start_from_index > end_at_index:
+        raise ValueError("start_from_config_index must be <= end_at_config_index.")
+
+    start_ordinal = start_from_index or 1
+    end_ordinal = end_at_index or total
+    selected = list(configs[start_ordinal - 1:end_ordinal])
+    return selected, start_ordinal, end_ordinal, total
+
+
 def print_runtime_device_context(runtime_device_context: Mapping[str, object]) -> None:
     discovered_device = runtime_device_context.get("discovered_device", {}) or {}
     device_profile = runtime_device_context.get("device_profile", {}) or {}
@@ -268,6 +294,8 @@ def run_multiroute_workflow(
     route_suffixes: Sequence[int] | None = None,
     skip_route_suffixes: Sequence[int] | None = None,
     config_ids: Sequence[str] | None = None,
+    start_from_config_index: int | None = None,
+    end_at_config_index: int | None = None,
     start_from_route: int | None = None,
     end_at_route: int | None = None,
     step_delay: float = DEFAULT_STEP_DELAY,
@@ -302,10 +330,21 @@ def run_multiroute_workflow(
     if not selected_route_suffixes:
         raise ValueError("No route suffix left after route window and skip filter.")
 
+    if config_ids is not None and (start_from_config_index is not None or end_at_config_index is not None):
+        raise ValueError("config_ids cannot be combined with start_from_config_index/end_at_config_index.")
+
     if config_ids is None:
-        configs = collect_configs(defaults["config_root"], defaults["total_configs_per_route"])
+        collected_configs = collect_configs(defaults["config_root"], defaults["total_configs_per_route"])
+        configs, config_start_index, config_end_index, total_config_count = resolve_config_window(
+            configs=collected_configs,
+            start_from_index=start_from_config_index,
+            end_at_index=end_at_config_index,
+        )
     else:
         configs = collect_configs_in_order(defaults["config_root"], config_ids)
+        config_start_index = 1
+        config_end_index = len(configs)
+        total_config_count = len(configs)
     if not configs:
         raise ValueError(f"No config json found under {defaults['config_root']}.")
 
@@ -315,6 +354,11 @@ def run_multiroute_workflow(
     print_runtime_device_context(runtime_device_context)
     print(f"[INFO] Route list: {selected_route_suffixes}")
     print(f"[INFO] Config count per route: {len(configs)}")
+    if total_config_count != len(configs):
+        print(
+            f"[INFO] Config window: #{config_start_index}..#{config_end_index} "
+            f"of {total_config_count}"
+        )
     print(f"[INFO] Recording: {'enabled' if enable_recording else 'disabled'}")
     if enable_recording:
         print(f"[INFO] Video postprocess: {resolved_postprocess_mode}")
@@ -361,9 +405,19 @@ def run_multiroute_workflow(
             print(f"[ROUTE] Recording disabled; {len(segments)} record segments will be skipped.")
 
         if enable_recording:
-            cleanup_route_outputs(defaults["video_base"], segments)
+            cleanup_route_outputs(
+                defaults["video_base"],
+                segments,
+                config_ids=config_id_list if total_config_count != len(configs) else None,
+            )
         if enable_recording and segments:
-            print(f"[ROUTE] Cleared raw and final outputs for route {route_suffix}.")
+            if total_config_count != len(configs):
+                print(
+                    f"[ROUTE] Cleared outputs for config window "
+                    f"#{config_start_index}..#{config_end_index} on route {route_suffix}."
+                )
+            else:
+                print(f"[ROUTE] Cleared raw and final outputs for route {route_suffix}.")
 
         postprocess_executor: ThreadPoolExecutor | None = None
         postprocess_jobs: List[Tuple[RouteSegment, Future]] = []
@@ -374,28 +428,29 @@ def run_multiroute_workflow(
             )
 
         try:
-            for config_index, (json_path, config_id) in enumerate(configs, start=1):
-                print(f"[CONFIG][R{route_suffix}][{config_index}/{len(configs)}] {json_path}")
-                if config_index > 1 and (config_index - 1) % 3 == 0:
+            for config_ordinal, (json_path, config_id) in enumerate(configs, start=config_start_index):
+                print(f"[CONFIG][R{route_suffix}][{config_ordinal}/{total_config_count}] {json_path}")
+                if config_ordinal > 1 and (config_ordinal - 1) % 3 == 0:
                     if "adjust_game_time" in action_table:
-                        print(f"[TIME][R{route_suffix}] adjust before config #{config_index}")
+                        print(f"[TIME][R{route_suffix}] adjust before config #{config_ordinal}")
                         action_table["adjust_game_time"]()
                     else:
                         print("[WARN] adjust_game_time not available in current action table.")
 
                 apply_render_config(json_path, runtime_device_context)
+                is_last_selected_config = config_ordinal == config_end_index
                 teleport_target = (
                     next_portal
                     if (
                         use_next_portal_on_last_config
-                        and config_index == len(configs)
+                        and is_last_selected_config
                         and next_portal is not None
                     )
                     else current_portal
                 )
                 if enable_recording:
                     on_segment_completed: Callable[[RouteSegment], None] | None = None
-                    if config_index == len(configs) and postprocess_executor is not None:
+                    if is_last_selected_config and postprocess_executor is not None:
                         def on_segment_completed(
                             segment: RouteSegment,
                             executor: ThreadPoolExecutor = postprocess_executor,
@@ -451,7 +506,7 @@ def run_multiroute_workflow(
                         f"Route {route_suffix} consumed {result['record_starts_seen']} record_start actions, "
                         f"expected {len(segments)}."
                     )
-                if config_index == len(configs) and teleport_target == next_portal and result["teleport_used"]:
+                if is_last_selected_config and teleport_target == next_portal and result["teleport_used"]:
                     transitioned_in_last_run = True
         finally:
             if postprocess_executor is not None:
@@ -470,14 +525,32 @@ def run_multiroute_workflow(
                         f"Examples: {preview}"
                     )
                 else:
-                    print(f"[ROUTE] Finished route {route_suffix} ({len(configs)}/{len(configs)})")
+                    if total_config_count != len(configs):
+                        print(
+                            f"[ROUTE] Finished route {route_suffix} "
+                            f"for config window #{config_start_index}..#{config_end_index}."
+                        )
+                    else:
+                        print(f"[ROUTE] Finished route {route_suffix} ({len(configs)}/{len(configs)})")
             else:
-                print(
-                    f"[ROUTE] Finished route {route_suffix} dry-run "
-                    f"({len(configs)}/{len(configs)})"
-                )
+                if total_config_count != len(configs):
+                    print(
+                        f"[ROUTE] Finished route {route_suffix} dry-run "
+                        f"for config window #{config_start_index}..#{config_end_index}."
+                    )
+                else:
+                    print(
+                        f"[ROUTE] Finished route {route_suffix} dry-run "
+                        f"({len(configs)}/{len(configs)})"
+                    )
         else:
-            print(f"[ROUTE] Finished route {route_suffix} without recording ({len(configs)}/{len(configs)})")
+            if total_config_count != len(configs):
+                print(
+                    f"[ROUTE] Finished route {route_suffix} without recording "
+                    f"for config window #{config_start_index}..#{config_end_index}."
+                )
+            else:
+                print(f"[ROUTE] Finished route {route_suffix} without recording ({len(configs)}/{len(configs)})")
 
         if route_index < len(selected_route_suffixes) - 1:
             if next_portal is None:
