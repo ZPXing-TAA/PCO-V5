@@ -6,6 +6,7 @@
 
 - `multiroute.py`
 - `debug_multiroute.py`
+- `repair_single_route.py`
 - `test_route.py`
 
 New devices should use runtime ADB discovery plus optional `device_profiles/<device_id>.json`.
@@ -81,9 +82,20 @@ This uses the fixed order from `measure_12_key_configs.md`, runs only one `ROUTE
 all `record_start` / `record_stop` actions, and does not transition to the next route after the
 last config.
 
+For partial recovery on a single route, for example re-recording from config `#52` to the end:
+
+```bash
+python3 repair_single_route.py
+```
+
+This runs only one `ROUTE_SUFFIX`, supports a 1-based config window via
+`START_FROM_CONFIG_INDEX` / `END_AT_CONFIG_INDEX`, clears and overwrites only the selected config
+outputs for that route, and does not transition to the next route after the last selected config.
+
 For frequent local adjustments, edit the constants directly inside:
 
 - `multiroute.py`
+- `repair_single_route.py`
 - `measure_12_key_configs.py`
 - `debug_multiroute.py`
 - `test_route.py`

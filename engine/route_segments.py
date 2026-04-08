@@ -182,7 +182,50 @@ def validate_expected_videos(
     return missing
 
 
-def cleanup_route_outputs(video_base_dir: str, segments: Iterable[RouteSegment]) -> None:
+def cleanup_route_outputs_for_configs(
+    video_base_dir: str,
+    segments: Iterable[RouteSegment],
+    config_ids: Iterable[str],
+) -> None:
+    config_id_list = list(config_ids)
+    if not config_id_list:
+        return
+
+    for segment in segments:
+        raw_dir = raw_segment_output_dir(video_base_dir, segment)
+        for config_id in config_id_list:
+            raw_path = raw_segment_video_path(video_base_dir, config_id, segment)
+            if os.path.exists(raw_path):
+                os.remove(raw_path)
+        _remove_dir_if_empty(raw_dir)
+
+        for final_segment in segment.planned_final_segments:
+            final_dir = final_segment_output_dir(video_base_dir, final_segment)
+            for config_id in config_id_list:
+                final_path = final_segment_video_path(video_base_dir, config_id, final_segment)
+                if os.path.exists(final_path):
+                    os.remove(final_path)
+            _remove_dir_if_empty(final_dir)
+
+
+def _remove_dir_if_empty(path: str) -> None:
+    if os.path.isdir(path) and not os.listdir(path):
+        os.rmdir(path)
+
+
+def cleanup_route_outputs(
+    video_base_dir: str,
+    segments: Iterable[RouteSegment],
+    config_ids: Iterable[str] | None = None,
+) -> None:
+    if config_ids is not None:
+        cleanup_route_outputs_for_configs(
+            video_base_dir=video_base_dir,
+            segments=segments,
+            config_ids=config_ids,
+        )
+        return
+
     seen = set()
     for segment in segments:
         path = raw_segment_output_dir(video_base_dir, segment)

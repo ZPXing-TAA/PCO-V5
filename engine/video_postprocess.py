@@ -126,13 +126,14 @@ def process_segment_directory(
         for source_video in source_videos:
             _emit_segment_outputs(video_base_dir=video_base_dir, segment=segment, source_video=source_video)
     except Exception:
-        for final_segment in segment.planned_final_segments:
-            target_dir = final_segment_output_dir(video_base_dir, final_segment)
-            if os.path.isdir(target_dir):
-                shutil.rmtree(target_dir)
+        _cleanup_temp_targets(
+            video_base_dir=video_base_dir,
+            segment=segment,
+            config_ids=expected_config_ids,
+        )
         raise
 
-    shutil.rmtree(source_dir)
+    _cleanup_processed_sources(source_dir=source_dir, config_ids=expected_config_ids)
     return summary
 
 
@@ -283,9 +284,31 @@ def _validate_source_duration(source_video: SourceVideoInfo, segment: RouteSegme
 def _prepare_target_dirs(video_base_dir: str, segment: RouteSegment) -> None:
     for final_segment in segment.planned_final_segments:
         target_dir = final_segment_output_dir(video_base_dir, final_segment)
-        if os.path.isdir(target_dir):
-            shutil.rmtree(target_dir)
         os.makedirs(target_dir, exist_ok=True)
+
+
+def _cleanup_temp_targets(
+    video_base_dir: str,
+    segment: RouteSegment,
+    config_ids: Sequence[str],
+) -> None:
+    for final_segment in segment.planned_final_segments:
+        target_dir = final_segment_output_dir(video_base_dir, final_segment)
+        for config_id in config_ids:
+            temp_target_path = f"{final_segment_video_path(video_base_dir, config_id, final_segment)}.tmp.mp4"
+            if os.path.exists(temp_target_path):
+                os.remove(temp_target_path)
+        if os.path.isdir(target_dir) and not os.listdir(target_dir):
+            os.rmdir(target_dir)
+
+
+def _cleanup_processed_sources(source_dir: str, config_ids: Sequence[str]) -> None:
+    for config_id in config_ids:
+        source_path = os.path.join(source_dir, f"{config_id}.mp4")
+        if os.path.exists(source_path):
+            os.remove(source_path)
+    if os.path.isdir(source_dir) and not os.listdir(source_dir):
+        os.rmdir(source_dir)
 
 
 def _emit_segment_outputs(video_base_dir: str, segment: RouteSegment, source_video: SourceVideoInfo) -> None:
