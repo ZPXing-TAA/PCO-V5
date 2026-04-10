@@ -24,11 +24,15 @@ BASE_POINTS: PointMap = {
     "TURN_90_R_L": (550, 300),
     "TURN_90_R_R": (1158, 300),
     "TURN_90_L_L": (1158, 300),
-    "TURN_90_L_R": (500, 300),
+    "TURN_90_L_R": (550, 300),
     "TURN_45_R_L": (550, 300),
     "TURN_45_R_R": (854, 300),
     "TURN_45_L_L": (854, 300),
     "TURN_45_L_R": (550, 300),
+    "TURN_60_R_L": (550, 300),
+    "TURN_60_R_R": (955, 300),
+    "TURN_60_L_L": (955, 300),
+    "TURN_60_L_R": (550, 300),
     "TURN_30_R_L": (550, 300),
     "TURN_30_R_R": (753, 300),
     "TURN_30_L_L": (753, 300),
@@ -160,6 +164,12 @@ def build_actions(runtime_device_context: Mapping[str, object]) -> Dict[str, obj
     def turn_left_45() -> None:
         swipe(*points["TURN_45_L_L"], *points["TURN_45_L_R"], 600)
 
+    def turn_right_60() -> None:
+        swipe(*points["TURN_60_R_L"], *points["TURN_60_R_R"], 600)
+
+    def turn_left_60() -> None:
+        swipe(*points["TURN_60_L_L"], *points["TURN_60_L_R"], 600)
+
     def turn_right_30() -> None:
         swipe(*points["TURN_30_R_L"], *points["TURN_30_R_R"], 600)
 
@@ -225,6 +235,8 @@ def build_actions(runtime_device_context: Mapping[str, object]) -> Dict[str, obj
         "turn_left_90": turn_left_90,
         "turn_right_45": turn_right_45,
         "turn_left_45": turn_left_45,
+        "turn_right_60": turn_right_60,
+        "turn_left_60": turn_left_60,
         "turn_right_30": turn_right_30,
         "turn_left_30": turn_left_30,
         "turn_right_135": turn_right_135,

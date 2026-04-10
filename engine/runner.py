@@ -38,6 +38,8 @@ def build_action_table(runtime_device_context: Mapping[str, object]) -> ActionTa
         "turn_left_90": lambda: actions["turn_left_90"](),
         "turn_right_45": lambda: actions["turn_right_45"](),
         "turn_left_45": lambda: actions["turn_left_45"](),
+        "turn_right_60": lambda: actions["turn_right_60"](),
+        "turn_left_60": lambda: actions["turn_left_60"](),
         "turn_right_30": lambda: actions["turn_right_30"](),
         "turn_left_30": lambda: actions["turn_left_30"](),
         "turn_right_135": lambda: actions["turn_right_135"](),
