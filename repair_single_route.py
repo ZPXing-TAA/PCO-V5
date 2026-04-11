@@ -13,9 +13,9 @@ from engine.video_postprocess import DEFAULT_SHORTFALL_TOLERANCE_SEC
 # Shared local control surface for partial re-recording on one route.
 # Device-bound values are auto-discovered at runtime.
 ROUTE_SUBPATH = "mondstadt"  # "natlan" | "mondstadt" | "fontaine"
-ROUTE_SUFFIX = 7
+ROUTE_SUFFIX = 3
 
-START_FROM_CONFIG_INDEX = 52  # 1-based, inclusive
+START_FROM_CONFIG_INDEX = 23  # 1-based, inclusive
 END_AT_CONFIG_INDEX = None  # 1-based, inclusive; None means run through the last config
 
 TOTAL_CONFIGS_PER_ROUTE = 80

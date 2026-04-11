@@ -1,0 +1,14 @@
+{
+  "device_id": "huawei_aln_al10_2720x1260",
+  "device_label": "HUAWEI ALN-AL10",
+  "target_resolution": [
+    2720,
+    1260
+  ],
+  "defaults": {
+    "video_base": "recordings/huawei_aln_al10_2720x1260",
+    "total_configs_per_route": 80
+  },
+  "legacy_aliases": [],
+  "notes": "Auto-generated from ADB discovery. Adjust defaults if needed."
+}
