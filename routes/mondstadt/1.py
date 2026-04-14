@@ -1,10 +1,6 @@
 ROUTE = [
-    ("record_start",),
     ("walk",5),
-    ("record_stop",),
-    ("record_start",),
     ("run", 5),
-    ("record_stop",),
     ("teleport",)
 ]
 PORTAL=[1405,598]

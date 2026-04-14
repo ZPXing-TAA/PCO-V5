@@ -9,6 +9,7 @@ from typing import Iterable, List, Sequence, Tuple
 
 PLANNED_CLIP_LENGTH_SEC = 5.0
 RAW_SEGMENTS_DIRNAME = "_raw_segments"
+NON_RECORDABLE_DURATION_ACTIONS = {"record_start", "record_stop", "sleep"}
 
 
 @dataclass(frozen=True)
@@ -52,76 +53,61 @@ def build_route_segments(route: Sequence[Sequence[object]], country: str, route_
     segments: List[RouteSegment] = []
     raw_label_occurrences = defaultdict(int)
     final_label_occurrences = defaultdict(int)
-    recorded_step: Sequence[object] | None = None
-    inside_record_window = False
 
     for index, step in enumerate(route):
-        name = step[0]
-        if name == "record_start":
-            if inside_record_window:
-                raise ValueError(f"Nested record_start found near route step {index}.")
-            inside_record_window = True
-            recorded_step = None
+        if not should_record_route_step(step):
             continue
 
-        if name == "record_stop":
-            if not inside_record_window:
-                raise ValueError(f"record_stop without record_start found near route step {index}.")
-            if recorded_step is None:
-                raise ValueError(f"Empty record window found near route step {index}.")
-
-            action_name = str(recorded_step[0])
-            route_duration_sec = _route_duration_sec(recorded_step, route_index=index)
-            segment_index = len(segments) + 1
-            raw_label_occurrences[action_name] += 1
-            occurrence_index = raw_label_occurrences[action_name]
-            planned_clip_count = _planned_clip_count(route_duration_sec)
-            planned_final_segments = []
-            for clip_index in range(planned_clip_count):
-                final_label_occurrences[action_name] += 1
-                final_occurrence_index = final_label_occurrences[action_name]
-                planned_final_segments.append(
-                    FinalSegment(
-                        parent_segment_index=segment_index,
-                        clip_index_within_parent=clip_index + 1,
-                        raw_action_name=action_name,
-                        label_name=action_name,
-                        occurrence_index_within_label=final_occurrence_index,
-                        segment_dir_name=(
-                            f"{country}_r{route_suffix:02d}_{action_name}{final_occurrence_index:02d}"
-                        ),
-                    )
-                )
-
-            planned_tail_drop_sec = max(0.0, route_duration_sec - (planned_clip_count * PLANNED_CLIP_LENGTH_SEC))
-            segments.append(
-                RouteSegment(
-                    segment_index=segment_index,
+        action_name = str(step[0])
+        route_duration_sec = _route_duration_sec(step, route_index=index)
+        segment_index = len(segments) + 1
+        raw_label_occurrences[action_name] += 1
+        occurrence_index = raw_label_occurrences[action_name]
+        planned_clip_count = _planned_clip_count(route_duration_sec)
+        planned_final_segments = []
+        for clip_index in range(planned_clip_count):
+            final_label_occurrences[action_name] += 1
+            final_occurrence_index = final_label_occurrences[action_name]
+            planned_final_segments.append(
+                FinalSegment(
+                    parent_segment_index=segment_index,
+                    clip_index_within_parent=clip_index + 1,
                     raw_action_name=action_name,
                     label_name=action_name,
-                    occurrence_index_within_label=occurrence_index,
-                    raw_segment_dir_name=f"{country}_r{route_suffix:02d}_{action_name}{occurrence_index:02d}",
-                    route_duration_sec=route_duration_sec,
-                    planned_clip_count=planned_clip_count,
-                    planned_tail_drop_sec=planned_tail_drop_sec,
-                    planned_final_segments=tuple(planned_final_segments),
+                    occurrence_index_within_label=final_occurrence_index,
+                    segment_dir_name=(
+                        f"{country}_r{route_suffix:02d}_{action_name}{final_occurrence_index:02d}"
+                    ),
                 )
             )
-            inside_record_window = False
-            recorded_step = None
-            continue
 
-        if inside_record_window:
-            if recorded_step is not None:
-                raise ValueError(
-                    f"Record window near route step {index} contains more than one action: "
-                    f"{recorded_step!r} and {step!r}"
-                )
-            recorded_step = step
+        planned_tail_drop_sec = max(0.0, route_duration_sec - (planned_clip_count * PLANNED_CLIP_LENGTH_SEC))
+        segments.append(
+            RouteSegment(
+                segment_index=segment_index,
+                raw_action_name=action_name,
+                label_name=action_name,
+                occurrence_index_within_label=occurrence_index,
+                raw_segment_dir_name=f"{country}_r{route_suffix:02d}_{action_name}{occurrence_index:02d}",
+                route_duration_sec=route_duration_sec,
+                planned_clip_count=planned_clip_count,
+                planned_tail_drop_sec=planned_tail_drop_sec,
+                planned_final_segments=tuple(planned_final_segments),
+            )
+        )
 
-    if inside_record_window:
-        raise ValueError("Route ended before record_stop.")
     return segments
+
+
+def should_record_route_step(step: Sequence[object]) -> bool:
+    if not step:
+        return False
+    action_name = str(step[0])
+    if action_name in NON_RECORDABLE_DURATION_ACTIONS:
+        return False
+    if len(step) < 2 or not isinstance(step[1], (int, float)):
+        return False
+    return float(step[1]) >= PLANNED_CLIP_LENGTH_SEC
 
 
 def _route_duration_sec(step: Sequence[object], route_index: int) -> float:

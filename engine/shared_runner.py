@@ -259,7 +259,7 @@ def _prepare_route_recorders(
     def on_record_start(segment_index: int) -> None:
         nonlocal recorder
         if segment_index >= len(segments):
-            raise ValueError("record_start count does not match precomputed route segments.")
+            raise ValueError("Recorded action count does not match precomputed route segments.")
         segment = segments[segment_index]
         video_path = raw_segment_video_path(video_base, config_id, segment)
         os.makedirs(os.path.dirname(video_path), exist_ok=True)
@@ -276,7 +276,7 @@ def _prepare_route_recorders(
             recorder = None
         if on_segment_completed is not None:
             if segment_index >= len(segments):
-                raise ValueError("record_stop count does not match precomputed route segments.")
+                raise ValueError("Recorded action count does not match precomputed route segments.")
             on_segment_completed(segments[segment_index])
 
     def stop_any() -> None:
@@ -501,9 +501,9 @@ def run_multiroute_workflow(
                 finally:
                     stop_any()
 
-                if result["record_starts_seen"] != len(segments):
+                if result["recorded_segments_seen"] != len(segments):
                     raise ValueError(
-                        f"Route {route_suffix} consumed {result['record_starts_seen']} record_start actions, "
+                        f"Route {route_suffix} consumed {result['recorded_segments_seen']} recorded actions, "
                         f"expected {len(segments)}."
                     )
                 if is_last_selected_config and teleport_target == next_portal and result["teleport_used"]:

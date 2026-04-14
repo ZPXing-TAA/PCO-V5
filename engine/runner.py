@@ -4,6 +4,7 @@ import time
 from typing import Callable, Mapping, MutableMapping, Sequence
 
 from actions.global_actions import build_actions
+from engine.route_segments import should_record_route_step
 
 ActionTable = MutableMapping[str, Callable[..., None]]
 
@@ -72,19 +73,20 @@ def run_route(
         print(f"[ACTION] {name} {tuple(args)}")
 
         if name == "record_start":
-            record_index += 1
-            if skip_record_actions:
-                print("[DEBUG] Skip action: record_start")
-            elif on_record_start is not None:
-                on_record_start(record_index)
+            print("[DEBUG] Ignore legacy record_start marker")
             continue
 
         if name == "record_stop":
-            if skip_record_actions:
-                print("[DEBUG] Skip action: record_stop")
-            elif on_record_stop is not None:
-                on_record_stop(record_index)
+            print("[DEBUG] Ignore legacy record_stop marker")
             continue
+
+        should_record = should_record_route_step(step)
+        if should_record:
+            record_index += 1
+            if skip_record_actions:
+                print(f"[DEBUG] Skip recording for timed action: {name}")
+            elif on_record_start is not None:
+                on_record_start(record_index)
 
         if name == "teleport":
             if skip_in_route_teleport:
@@ -99,9 +101,13 @@ def run_route(
         else:
             action_table[name](*args)
 
+        if should_record and not skip_record_actions and on_record_stop is not None:
+            on_record_stop(record_index)
+
         time.sleep(step_delay)
 
     return {
         "teleport_used": teleport_used,
         "record_starts_seen": record_index + 1,
+        "recorded_segments_seen": record_index + 1,
     }
