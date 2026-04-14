@@ -7,8 +7,8 @@ from engine.shared_runner import DEFAULT_ROUTE_GAP, DEFAULT_STEP_DELAY, run_debu
 # Device-bound values are auto-discovered at runtime.
 ROUTE_SUBPATH = "mondstadt"  # "natlan" | "mondstadt"
 SKIP_ROUTE_SUFFIXES = []
-START_FROM_ROUTE = 1
-END_AT_ROUTE = 10
+START_FROM_ROUTE = 11
+END_AT_ROUTE = 15
 
 STEP_DELAY = DEFAULT_STEP_DELAY
 ROUTE_GAP = DEFAULT_ROUTE_GAP

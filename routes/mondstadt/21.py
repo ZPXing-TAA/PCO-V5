@@ -1,19 +1,12 @@
 ROUTE = [
-    ("turn_left_90",),
-    ("turn_left_30",),
-    ("turn_left_30",),
+    ("sleep",2),
     ("record_start",),
-    ("walk",10),
+    ("walk",5),
     ("record_stop",),
-    ("turn_right_45",),
     ("record_start",),
-    ("walk",10),
-    ("record_stop",),
-    ("turn_right_45",),
-    ("record_start",),
-    ("walk",12),
+    ("swim",10),
     ("record_stop",),
     ("teleport",)
 ]
-PORTAL=[1500,650]
-NEXT_PORTAL=[1130,835]
+PORTAL=[1400,612]
+NEXT_PORTAL=[1059,240]
